@@ -6,6 +6,8 @@ from datetime import datetime
 from uuid import UUID
 from utils.user_manager import UserManager
 from utils.notes_manager import NotesManager
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 import sys
 import re
 import uuid
@@ -20,6 +22,7 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True
 MONGO_HOST = getenv("MONGO_HOST")
 MONGO_DB = getenv("MONGO_DB")
+SENDGRID_API_KEY = getenv("SENDGRID_API_KEY")
 client = None
 
 try:  
@@ -125,6 +128,73 @@ def login_view_post():
         return response
 
     return jsonify(error=f"Failed to login user with credentials given."), 400    
+
+
+@app.route('/password-reset-request', methods=['GET', 'POST'])
+def password_reset_token_view():
+    if request.method == 'POST':
+        email = request.form.get("email")  
+        errors = {}
+        
+        if not email:
+            errors["email"] = "field cannot be empty"
+
+        if errors:
+            return jsonify(errors=errors), 400
+
+        if user_manager.get_user_by_email(email):
+            message = Mail(
+                from_email='no-reply@usamodzielnieni.pl',
+                to_emails=email,
+                subject='SafeNotes: password reset',
+                html_content=f'<a href="{request.url_root + "password-reset/" + user_manager.generate_pass_reset_token(email)}"> \
+                    Click here</a> to reset your password for SafeNotes!')
+            try:
+                sg = SendGridAPIClient(SENDGRID_API_KEY)
+                response = sg.send(message)
+            except Exception as e:
+                pass
+
+        
+        return jsonify(message="Password reset link was sent to your email"), 201
+
+    if request.method == 'GET':
+        return render_template('pass_reset_request.html')
+
+
+@app.route('/password-reset/<token>', methods=['GET', 'POST'])
+def password_reset_view(token):
+    if not user_manager.validate_token(token):
+        return render_template('pass_reset_failure.html')
+
+    if request.method == 'POST':
+        data = {}
+        data['new_pass1'] = request.form.get('new_pass1')
+        data['new_pass2'] = request.form.get('new_pass2')
+        
+        errors = {}
+        for k, v in data.items():
+            if not v:
+                errors[k] = "field cannot be empty"
+
+        if errors:
+            return jsonify(errors=errors), 400
+        
+        if not re.match("^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,72}$", data['new_pass1']):
+            errors['new_pass1'] = "password must consist of between 7-82 characters, including a letter, a number and a special character"
+
+        if data['new_pass1'] != data['new_pass2']:
+            errors['new_pass2'] = "passwords don't match"
+
+        if errors:
+            return jsonify(errors=errors), 400
+
+        user_manager.reset_pass_by_token(token, data['new_pass1'])
+
+        return jsonify(message="Password was changed successfully"), 200
+
+    if request.method == 'GET':
+        return render_template('password_reset_form.html')
 
 
 @app.route('/logout', methods=['GET'])

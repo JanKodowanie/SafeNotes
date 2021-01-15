@@ -4,39 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="/static/styles.css">
-    <script src="/static/pass_change.js"></script>
+    <script src="/static/pass_reset_request.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"> 
     <title>SafeNotes</title>
 </head>
     <body>
         <nav>
             <a class="nav-item" href="/">Home</a>
-            <a class="nav-item" href="/user/notes" >My notes</a>
-            <a class="nav-item" href="/user" >Manage account</a>
-            <a class="nav-item" href="/logout" >Logout</a>
+            <a class="nav-item" href="/sign-up">Sign up</a>
+            <a class="nav-item" href="/sign-in">Sign in</a>
         </nav>
         <div class="content">
             <section class="new-note-view">
-                <h1>Change your password:</h1>
-                <form id="password-change">
+                <h1>Reset your password:</h1>
+                <form id="password-reset">
                     <ul class="new-note-form-content">
                         <li>
-                            <input type="password" id="old-pass" name="old_pass" placeholder="Old password">
-                        </li>
-                        <li>
-                            <input type="password" id="new-pass1" name="new_pass1" placeholder="New password">
-                        </li>
-                        <li>
-                            <input type="password" id="new-pass2" name="new_pass2" placeholder="Repeat new password">
+                            <input type="email" id="email" name="email" placeholder="Email">
                         </li>
                         <li>
                             <button class="button2" type="submit">Submit</button>
                         </li> 
                         <li>
                             <ul class="error-list">
-                                <li class="error-mes-hidden" id="old-pass-error"></li>
-                                <li class="error-mes-hidden" id="new-pass1-error"></li>
-                                <li class="error-mes-hidden" id="new-pass2-error"></li>
+                                <li class="error-mes-hidden" id="pass-message"></li>
                             </ul>
                         </li>
                     </ul>
