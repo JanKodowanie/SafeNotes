@@ -149,8 +149,7 @@ onSubmitData = async function (e) {
         let response = await fetch('/user/notes/new', {method: 'POST', body: data})
 
         if (response.status === 201) {
-            window.location.href = response.url;
-            alert("Note created successfully!")
+            window.location.href = "/user/notes"
         } 
     }    
 }

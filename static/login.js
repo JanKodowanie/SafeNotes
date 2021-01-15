@@ -17,7 +17,7 @@ onSubmitData = async function (e) {
             errorMsg.innerText = "Couldn't sign in with the credentials provided!"
             result = false
         } else {
-            window.location.href = response.url;
+            window.location.href = "/"
         }
     })
     

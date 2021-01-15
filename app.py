@@ -20,12 +20,13 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True
 MONGO_HOST = getenv("MONGO_HOST")
 MONGO_DB = getenv("MONGO_DB")
-client = pymongo.MongoClient(MONGO_HOST, serverSelectionTimeoutMS=3000)
+client = None
 
 try:  
+    client = pymongo.MongoClient(MONGO_HOST, serverSelectionTimeoutMS=3000)
     client.server_info() 
 except Exception:
-    print("Couldn't connect to database. Process will terminate.")
+    print("Couldn't connect to the database. Process will terminate.")
     sys.exit(-1)
 
 db = client[MONGO_DB]
@@ -41,7 +42,7 @@ notes_manager = NotesManager(db=db)
 
 @app.route('/', methods=['GET'])
 def start():
-    if username not in session:
+    if 'username' not in session:
         notes = notes_manager.get_public_notes()      
     else:
         notes = notes_manager.get_notes_available_to_user(session['username'])
@@ -88,8 +89,7 @@ def registration_view_post():
 
     data['date_joined'] = datetime.now()
     user_manager.save_user(data)
-    response = make_response("", 301)
-    response.headers["Location"] = "/sign-in"
+    response = make_response("", 201)
 
     return response
 
@@ -117,8 +117,8 @@ def login_view_post():
     if user:
         session["username"] = user['username']
         session["timestamp"] = datetime.now()
-        response = make_response("", 301)
-        response.headers["Location"] = "/"
+        response = make_response("", 200)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return response
 
     return jsonify(error=f"Failed to login user with credentials given."), 400    
@@ -135,7 +135,7 @@ def logout_view():
 
 @app.route('/user/notes', methods=['GET'])
 def user_notes_view_get():
-    if username not in session:
+    if 'username' not in session:
         return jsonify(error="Not authenticated"), 401 
 
     notes = notes_manager.get_notes_by_author(session['username'])
@@ -143,14 +143,83 @@ def user_notes_view_get():
     return render_template('user_notes.html', notes=notes)
 
 
-@app.route('/user/notes/new', methods=['GET'])
-def user_new_note_view_get():
-    if username not in session:
+@app.route('/user/notes/new', methods=['GET', 'POST'])
+def user_new_note_view():
+    if 'username' not in session:
         return jsonify(error="Not authenticated"), 401 
 
-    user_list = user_manager.get_other_users(session['username'])
+    if request.method == 'GET':
+        user_list = user_manager.get_other_users(session['username'])
+        return render_template('new_note_form.html', users=user_list)
 
-    return render_template('new_note_form.html', users=user_list)
+    if request.method == 'POST':
+        data = {}
+        data['title'] = request.form.get("title")  
+        data['content'] = request.form.get("content")
+    
+        errors = {}
+        for k, v in data.items():
+            if not re.match("\S", v):
+                errors[k] = "field cannot be empty"
+
+        if 'title' not in errors and not re.match("^[\s\S]{0,120}$", data['title']):
+            errors['title'] = "Title cannot have more than 120 characters"
+
+        if 'content' not in errors and not re.match("^[\s\S]{0,1000}$", data['content']):
+            errors['content'] = "Content cannot have more than 1000 characters"
+
+        if errors:
+            return jsonify(errors=errors), 400
+
+        data['public'] = True
+        if 'public' not in request.form:
+            data['public'] = False
+
+        data['shared_with'] = []
+        if 'receivers' in request.form:
+            data['shared_with'] = request.form['receivers'].split(',')
+
+        data['author'] = session['username']
+
+        notes_manager.save_note(data)
+        response = make_response("", 201)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+
+        return response
+
+@app.route('/user/notes/<_id>/delete', methods=['GET'])
+def user_notes_delete(_id):
+    if 'username' not in session:
+        return jsonify(error="Not authenticated"), 401 
+
+    errors = {}
+    if not _id:
+        errors['_id'] = "id must be specified in the url"
+
+    if _id:
+        try:
+            UUID(_id, version=4)
+        except ValueError:
+            errors['_id'] = "must be a valid uuid4"
+
+    if errors:
+        return jsonify(errors=errors), 400
+
+    note = notes_manager.get_note_by_id(UUID(_id, version=4))
+
+    if note:
+        if note['author'] != session['username']:
+            return jsonify(error="This note does not belong to the current user"), 403 
+        else:
+            notes_manager.delete_note(UUID(_id, version=4))
+    else:
+        return jsonify(error="Note not found"), 404 
+    
+    response = make_response("", 301)
+    response.headers["Location"] = "/user/notes"
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+
+    return response
 
 
 if __name__ == '__main__':

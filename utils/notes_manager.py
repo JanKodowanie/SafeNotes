@@ -14,7 +14,7 @@ class NotesManager:
             _id = uuid.uuid4()
 
         validated_data['_id'] = _id
-        validated_data['date_created'] = datetime.now()
+        validated_data['date_created'] = datetime.now().strftime("%d/%m/%Y, %H:%M")
 
         try:
             self.db.notes.insert_one(validated_data)
@@ -37,8 +37,7 @@ class NotesManager:
         return self.db.notes.find({"public": True}).sort('date_created', pymongo.DESCENDING)
 
     def get_notes_available_to_user(self, username):
-        return self.db.notes.find({"$or": [{"public": True}, {"shared_with": username}, {"author": username}]})
-            .sort('date_created', pymongo.DESCENDING)
+        return self.db.notes.find({"$or": [{"public": True}, {"shared_with": username}, {"author": username}]}).sort('date_created', pymongo.DESCENDING)
 
     def get_note_by_id(self, _id):
         return self.db.notes.find_one({"_id": _id})

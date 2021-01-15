@@ -107,7 +107,7 @@ onSubmitData = async function (e) {
                 emailErrorMsg.innerText = data.errors.email
             }
         } else {
-            window.location.href = response.url;
+            window.location.href = "/sign-in"
         }
     }    
 }

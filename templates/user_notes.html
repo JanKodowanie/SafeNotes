@@ -24,13 +24,18 @@
                             <div class="note-data">
                                 <div class="note-title">{{ note.title|e }}</div>
                                 <div class="note-text">{{ note.content|e }}</div>
-                                <div><span>Author: </span>{{ note.author|e }}</div>   
+                                {% if note.public %}
+                                    <div><span>Public: </span>yes</div> 
+                                {% else %}
+                                    <div><span>Public: </span>no</div> 
+                                    <div><span>Receivers: </span>{{ note.shared_with|join(", ")|e }}</div> 
+                                {% endif %}
                                 <div><span>Published on: </span>{{ note.date_created|e }}</div>
-                            </div>    
+                            </div>
+                            <form action="{{ url_for('user_notes_delete', _id=note._id) }}" method="GET">
+                                <button class="button2">Delete</button>
+                            </form>    
                         </div>
-                        <form action="/user/notes/{{ note._id }}/delete" method="GET">
-                            <button class="button2">Delete</button>
-                        </form>
                 {% endfor %}
             </div>
         </div>
