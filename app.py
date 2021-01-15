@@ -73,6 +73,9 @@ def registration_view_post():
     elif data['username'] and not re.match("^[a-zA-Z0-9]{3,12}$", data['username']):
         errors['username'] = "username must contain 3-12 alphanumeric characters"
 
+    if data['email']:
+        data['email'] = data['email'].lower()
+
     if data['email'] and user_manager.get_user_by_email(data['email']):
         errors['email'] = "email already taken"
     elif data['email'] and not re.match("^[\w\-\.]+@([\w\-]+\.)+[\w]{1,}$", data['email']):
@@ -223,4 +226,5 @@ def user_notes_delete(_id):
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=False, ssl_context='adhoc')
+    context = ('servercert.pem', 'serverkey.pem')  
+    app.run(host="0.0.0.0", port=5000, debug=False, ssl_context=context)
