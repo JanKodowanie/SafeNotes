@@ -8,28 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"> 
     <title>SafeNotes</title>
 </head>
-    <body>
+    <body class="dashboard">
         <nav>
             <a class="nav-item" href="/">Home</a>
-            {% if session["username"] %}
-                <a class="nav-item" href="/user/notes" >My notes</a>
-                <a class="nav-item" href="/user" >Manage account</a>
-                <a class="nav-item" href="/logout" >Logout</a>
-            {% else %}
-                <a class="nav-item" href="/sign-up">Sign up</a>
-                <a class="nav-item" href="/sign-in">Sign in</a>
-            {% endif %}
+            <a class="nav-item" href="/user/notes" >My notes</a>
+            <a class="nav-item" href="/user" >Manage account</a>
+            <a class="nav-item" href="/logout" >Logout</a>
         </nav>
         <div class="content">
-            {% if session["username"] %}
-                <div>
-                    <h1 class="section-header1">Hello, {{ session['username'] }}!</h1>
-                </div>
-            {% endif %}
-            <div>
-                <h2 class="section-header3">Latest notes:</h2>
-                <div class="dashboard-table">
-                    {% for note in notes %}
+            <h2 class="section-header2">Your notes:</h2>
+            <a href="/user/notes/new" class="button2">New note</a>
+            <div class="dashboard-table">
+                {% for note in notes %}
                         <div class="note">
                             <div class="note-data">
                                 <div class="note-title">{{ note.title|e }}</div>
@@ -38,9 +28,11 @@
                                 <div><span>Published on: </span>{{ note.date_created|e }}</div>
                             </div>    
                         </div>
-                    {% endfor %}
-                </div>
-            </div>   
+                        <form action="/user/notes/{{ note._id }}/delete" method="GET">
+                            <button class="button2">Delete</button>
+                        </form>
+                {% endfor %}
+            </div>
         </div>
         <footer>
             <span id="pamw">Ochrona danych, 2021</span> 

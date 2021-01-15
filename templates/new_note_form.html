@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <script src="/static/new_note.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet"> 
+    <title>SafeNotes</title>
+</head>
+    <body>
+        <nav>
+            <a class="nav-item" href="/">Home</a>
+            <a class="nav-item" href="/user/notes" >My notes</a>
+            <a class="nav-item" href="/user" >Manage account</a>
+            <a class="nav-item" href="/logout" >Logout</a>
+        </nav>
+        <div class="content">
+            <section class="new-note-view">
+                <h1>Create a new note</h1>
+                <form id="noteform">
+                    <ul class="new-note-form-content">
+                        <li>
+                            <input type="text" id="title" name="title" placeholder="Title">
+                        </li>
+                        <li>
+                            <textarea placeholder="Enter text here..." id="content" name="content" form="noteform"></textarea>
+                        </li>
+                        <li>
+                            <div class="receivers-selection">
+                                <div>
+                                    <label for="public">Public</label>
+                                    <input type="checkbox" id="public" name="public" checked>
+                                </div>
+                                <div id="receiversPane" class="receivers-list">
+                                    <select id="user-select">
+                                        {% for username in users %}
+                                            <option>{{ username|e }}</option>
+                                        {% endfor %}
+                                        <option>test1</option>
+                                        <option>test2</option>
+                                    </select>
+                                    <button id="add_del_button" type="button" class="button2">Add a receiver</button>
+                                    <p>Receivers: <span id="receivers"></span></p>
+                                </div>
+                            </div>
+                        </li> 
+                        <li>
+                            <button class="button2" type="submit">Submit</button>
+                        </li> 
+                        <li>
+                            <ul class="error-list">
+                                <li class="error-mes-hidden" id="title-error"></li>
+                                <li class="error-mes-hidden" id="content-error"></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </form>
+            </section>
+        </div>
+        <footer>
+            <span id="pamw">Ochrona danych, 2021</span> 
+            <a id="repo-link" target="_blank" href="https://github.com/JanKodowanie/SafeNotes" id="repo">Repozytorium Github</a>
+        </footer>
+    </body>
+</html>
+

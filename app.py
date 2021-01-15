@@ -2,9 +2,10 @@ from flask import Flask, render_template, make_response, request, session, jsoni
 from flask_session import Session
 from os import getenv
 from dotenv import load_dotenv
-from bcrypt import checkpw, gensalt, hashpw
 from datetime import datetime
 from uuid import UUID
+from utils.user_manager import UserManager
+from utils.notes_manager import NotesManager
 import sys
 import re
 import uuid
@@ -16,7 +17,7 @@ app = Flask(__name__)
 load_dotenv()
 SECRET_KEY = getenv("SECRET_KEY")
 SESSION_COOKIE_HTTPONLY = True
-# SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 MONGO_HOST = getenv("MONGO_HOST")
 MONGO_DB = getenv("MONGO_DB")
 client = pymongo.MongoClient(MONGO_HOST, serverSelectionTimeoutMS=3000)
@@ -34,46 +35,18 @@ SESSION_MONGODB_DB = MONGO_DB
 app.config.from_object(__name__)
 ses = Session(app)
 
-
-def save_user(validated_data):
-    salt = gensalt(rounds=12)
-    password = validated_data['password'].encode("utf-8")
-    hashed_pw = hashpw(password, salt)
-    validated_data['password'] = hashed_pw
-    validated_data.pop('password2')
-    
-    try:
-        db.users.insert_one(validated_data)
-    except Exception:
-        return False
-
-    return True
+user_manager = UserManager(db=db)
+notes_manager = NotesManager(db=db)
 
 
-def get_user_by_email(email):
-    return db.users.find_one({"email": email})
-
-
-def get_user_by_username(username):
-    return db.users.find_one({"username": username})
-
-
-def check_if_user_credentials_are_valid(email, password): 
-    user = get_user_by_email(email)
-    if not user:
-        return False
-
-    hashed_pw = user.get('password')
-    
-    user = None
-    if checkpw(password.encode(), hashed_pw):
-        user = get_user_by_email(email)
-    return user
-
-
-@app.route('/')
+@app.route('/', methods=['GET'])
 def start():
-    return render_template('home.html')
+    if username not in session:
+        notes = notes_manager.get_public_notes()      
+    else:
+        notes = notes_manager.get_notes_available_to_user(session['username'])
+
+    return render_template('home.html', notes=notes)
 
 
 @app.route('/sign-up', methods=['GET'])
@@ -94,12 +67,12 @@ def registration_view_post():
         if not v:
             errors[k] = "field cannot be empty"
 
-    if data['username'] and get_user_by_username(data['username']):
+    if data['username'] and user_manager.get_user_by_username(data['username']):
         errors['username'] = "username already taken"
     elif data['username'] and not re.match("^[a-zA-Z0-9]{3,12}$", data['username']):
         errors['username'] = "username must contain 3-12 alphanumeric characters"
 
-    if data['email'] and get_user_by_email(data['email']):
+    if data['email'] and user_manager.get_user_by_email(data['email']):
         errors['email'] = "email already taken"
     elif data['email'] and not re.match("^[\w\-\.]+@([\w\-]+\.)+[\w]{1,}$", data['email']):
         errors['email'] = "provide a valid email address"
@@ -114,7 +87,7 @@ def registration_view_post():
         return jsonify(errors=errors), 400
 
     data['date_joined'] = datetime.now()
-    save_user(data)
+    user_manager.save_user(data)
     response = make_response("", 301)
     response.headers["Location"] = "/sign-in"
 
@@ -140,7 +113,7 @@ def login_view_post():
     if errors:
         return jsonify(errors=errors), 400
 
-    user = check_if_user_credentials_are_valid(data['email'], data['password'])
+    user = user_manager.check_if_user_credentials_are_valid(data['email'], data['password'])
     if user:
         session["username"] = user['username']
         session["timestamp"] = datetime.now()
@@ -160,5 +133,25 @@ def logout_view():
     return response
 
 
+@app.route('/user/notes', methods=['GET'])
+def user_notes_view_get():
+    if username not in session:
+        return jsonify(error="Not authenticated"), 401 
+
+    notes = notes_manager.get_notes_by_author(session['username'])
+
+    return render_template('user_notes.html', notes=notes)
+
+
+@app.route('/user/notes/new', methods=['GET'])
+def user_new_note_view_get():
+    if username not in session:
+        return jsonify(error="Not authenticated"), 401 
+
+    user_list = user_manager.get_other_users(session['username'])
+
+    return render_template('new_note_form.html', users=user_list)
+
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=False, ssl_context='adhoc')

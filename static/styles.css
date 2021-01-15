@@ -4,6 +4,7 @@ html, body {
     margin: 0;
     width: 100%; 
     height: 100%;
+    background-color: rgb(228, 179, 57);
 }
 
 h1 {
@@ -13,49 +14,49 @@ h1 {
     text-align: left;
 }
 
-.parcel {
+.note {
     display: flex;
-    margin-bottom: 0.5%;
+    margin-bottom: 2%;
 }
 
-.parcel-data {
+.note-data {
     font-size: calc(8px + 0.4vw);
     padding: calc(5px + 1%);
     background-color: #b5dcff;
     border: thin solid;
-    width: 50%;
+    width: 100%;
 }
 
-.parcel-data td:nth-of-type(1) {
-    width: 55%;
-}
-
-.parcel-data td:nth-of-type(2) {
-    width: 30%;
-}
-
-.parcel-data td:nth-of-type(3) {
-    width: 15%;
-}
-
-.parcel-index {
+.note-title {
     font-size: calc(10px + 0.5vw);
     font-weight: 700;
 }
 
-.parcel-data span:not(.parcel-id) {
+.note-text {
+    margin: 1% 0;
+    text-align: justify;
+}
+
+.note-data span:not(.parcel-id) {
     color: crimson;
     font-weight: 700;
 }
 
 .section-header1 {
-    margin: 3% 0;
+    margin-top: 3%;
 }
 
 .section-header2 {
     font-size: calc(10px + 0.6vw);
     font-weight: 700;
     margin: 2% 0;
+    text-align: left;
+}
+
+.section-header3 {
+    font-size: calc(10px + 0.6vw);
+    font-weight: 700;
+    margin-top: 2%;
     text-align: left;
 }
 
@@ -72,9 +73,24 @@ h1 {
     background-color: rgb(184, 15, 49);
 }
 
+.button2 {
+    margin-top: 1%;
+    font-size: calc(8px + 0.3vw);
+    padding: calc(3px + 0.5%);
+    border: none;
+    color: white;
+    text-decoration: none;
+    background-color: crimson;
+}
+
+.button2:hover {
+    background-color: rgb(184, 15, 49);
+}
+
 .button-wrapper1 {
     padding: calc(18px + 2%) calc(10px + 1%);
 }
+
 
 #author {
     color: white;
@@ -129,8 +145,8 @@ header {
     margin: 0 15%; 
 }
 
-.dashboard {
-    background-color: rgb(228, 179, 57);
+.dashboard-table {
+    padding: 2.5% 0;
 }
 
 .middle {
@@ -190,6 +206,67 @@ footer {
     font-size: calc(8px + 0.5vw);
     width: 32vw; 
     text-align: justify;
+}
+
+.new-note-view {
+    margin: 5% 0%;
+}
+
+.new-note-form-content {
+    list-style: none;
+    padding: 0;
+}
+
+.new-note-form-content li{
+    margin: 0.5vw 0;
+}
+
+.new-note-form-content li input[type=text] {
+    width: 100%;
+    height: 2vh;
+}
+
+.new-note-form-content li textarea {
+    width: 100%;
+    height: 20vh;
+    resize: none;
+}
+
+.new-note-form-content li button[type=submit] {
+    width: 10%;
+    margin-left: 45%;
+}
+
+.receivers-selection {
+    display: flex;
+    width: 100%;
+}
+
+.receivers-selection div {
+    margin-right: 2%;
+}
+
+.receivers-list {
+    display: flex;
+    width: 80%;
+    visibility: hidden;
+}
+
+.receivers-list * {
+    margin: 0;
+    margin-right: 7%;
+}
+
+.receivers-list select{
+    width: 15%;
+}
+
+.receivers-list button{
+    width: 10%;
+}
+
+.receivers-list p{
+    width: 60%;
 }
 
 .form-list {
