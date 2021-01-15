@@ -21,6 +21,18 @@ class UserManager:
 
         return True
 
+    def change_user_password(self, username, new_pass):
+        salt = gensalt(rounds=12)
+        password = new_pass.encode("utf-8")
+        hashed_pw = hashpw(password, salt)
+        
+        try:
+            self.db.users.update_one({'username': username}, {'$set': {'password': hashed_pw}})
+        except Exception:
+            return False
+
+        return True
+
     def get_other_users(self, username):
         usernames = []
         for user in self.db.users.find().sort('username'):

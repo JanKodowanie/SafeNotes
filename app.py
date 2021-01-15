@@ -225,6 +225,49 @@ def user_notes_delete(_id):
     return response
 
 
+@app.route('/user', methods=['GET', 'POST'])
+def user_account_view():
+    if 'username' not in session:
+        return jsonify(error="Not authenticated"), 401 
+
+    if request.method == 'GET':
+        return render_template('manage_account.html')
+
+    if request.method == 'POST':
+        data = {}
+        data['old_pass'] = request.form.get('old_pass')  
+        data['new_pass1'] = request.form.get('new_pass1')
+        data['new_pass2'] = request.form.get('new_pass2')
+        
+        errors = {}
+        for k, v in data.items():
+            if not v:
+                errors[k] = "field cannot be empty"
+
+        if errors:
+            return jsonify(errors=errors), 400
+
+
+        user = user_manager.get_user_by_username(session['username']) 
+        
+        if user_manager.check_if_user_credentials_are_valid(user['email'], data['old_pass']):
+            if data['new_pass1'] and not re.match("^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,72}$", data['new_pass1']):
+                errors['new_pass1'] = "password must consist of between 7-82 characters, including a letter, a number and a special character"
+
+            if data['new_pass1'] and data['new_pass2'] and not data['new_pass1'] == data['new_pass2']:
+                errors['new_pass2'] = "passwords don't match"
+
+            if errors:
+                return jsonify(errors=errors), 400
+
+            user_manager.change_user_password(session['username'], data['new_pass1'])
+
+            return jsonify(message="Password changed successfully"), 200
+
+        errors['old_pass'] = "Old password is not right"
+        return jsonify(errors=errors), 400
+        
+
 if __name__ == '__main__':
     context = ('servercert.pem', 'serverkey.pem')  
     app.run(host="0.0.0.0", port=5000, debug=False, ssl_context=context)

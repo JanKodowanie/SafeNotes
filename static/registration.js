@@ -3,6 +3,7 @@ var usernameReg = new RegExp("^[a-zA-Z0-9]{3,12}$")
 var usernameMessage = "Username must contain between 3 to 12 alphanumeric characters"
 var passwordMessage = "Password must consist of 8-72 characters, including a letter, a number and a special character"
 var password2Message = "Passwords must match"
+var regForm = null
 
 
 var fieldState = {
